@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -41,6 +42,22 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        // Lazily link or create customer record
+        $customer = Customer::where('email', $user->email)->first();
+        if ($customer) {
+            $customer->update([
+                'user_id' => $user->id,
+                'name' => $customer->name ?? $user->name,
+            ]);
+        } else {
+            Customer::create([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'country_code' => 'US',
+            ]);
+        }
 
         event(new Registered($user));
 

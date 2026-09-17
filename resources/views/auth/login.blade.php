@@ -43,5 +43,12 @@
                 {{ __('Log in') }}
             </x-primary-button>
         </div>
+
+        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Prefer passwordless sign-in?</p>
+            <a href="{{ route('magic-link.create') }}" class="inline-flex items-center justify-center w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md text-xs font-semibold uppercase tracking-widest transition">
+                {{ __('Sign In With Magic Link') }}
+            </a>
+        </div>
     </form>
 </x-guest-layout>

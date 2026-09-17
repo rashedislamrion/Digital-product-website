@@ -35,9 +35,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Seed the temporary administrative user
+        // 1. Seed administrative roles, permissions, and staff test users
         $this->call([
-            AdminUserSeeder::class,
+            RolePermissionSeeder::class,
         ]);
 
         $adminUser = User::where('email', 'admin@example.com')->first();

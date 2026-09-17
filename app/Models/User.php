@@ -23,12 +23,35 @@ class User extends Authenticatable implements FilamentUser
     use HasFactory, HasRoles, Notifiable;
 
     /**
+     * Determine if the user is an administrative or staff member.
+     */
+    public function isStaff(): bool
+    {
+        return $this->hasAnyRole([
+            'Super Admin',
+            'super_admin',
+            'Finance Manager',
+            'Catalog Editor',
+            'Support Agent',
+            'Review Moderator',
+        ]);
+    }
+
+    /**
+     * Determine if the user is a public customer account.
+     */
+    public function isCustomer(): bool
+    {
+        return ! $this->isStaff();
+    }
+
+    /**
      * Determine whether the user can access the Filament panel.
      */
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() === 'admin') {
-            return $this->hasRole('super_admin') || $this->email === 'admin@example.com';
+            return $this->isStaff();
         }
 
         return true;

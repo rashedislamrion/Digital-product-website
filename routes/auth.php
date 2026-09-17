@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -21,6 +22,16 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    // Passwordless Magic Link Login
+    Route::get('magic-link', [MagicLinkController::class, 'create'])
+        ->name('magic-link.create');
+
+    Route::post('magic-link', [MagicLinkController::class, 'store'])
+        ->name('magic-link.store');
+
+    Route::get('magic-link/verify', [MagicLinkController::class, 'verify'])
+        ->name('magic-link.verify');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
