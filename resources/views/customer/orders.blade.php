@@ -117,12 +117,28 @@
                                     <div class="flex items-center space-x-3">
                                         @forelse($item->downloadGrants as $grant)
                                             <div class="text-right">
-                                                <span class="text-xs text-gray-500 block mb-1">
+                                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">
                                                     {{ $grant->download_count }} of {{ $grant->max_download_attempts }} downloads used
                                                 </span>
-                                                <button class="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-semibold hover:bg-indigo-700">
-                                                    Download Release
-                                                </button>
+                                                @if($grant->is_revoked)
+                                                    <span class="inline-block px-3 py-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded text-xs font-semibold">
+                                                        Revoked
+                                                    </span>
+                                                @elseif($grant->download_count >= $grant->max_download_attempts)
+                                                    <span class="inline-block px-3 py-1.5 bg-gray-500/10 text-gray-400 border border-gray-500/30 rounded text-xs font-semibold">
+                                                        Limit Reached
+                                                    </span>
+                                                @else
+                                                    <a 
+                                                        href="{{ route('library.download', ['download_grant' => $grant->id]) }}" 
+                                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-semibold hover:bg-indigo-500 transition-colors shadow-sm"
+                                                    >
+                                                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                        </svg>
+                                                        <span>Download</span>
+                                                    </a>
+                                                @endif
                                             </div>
                                         @empty
                                             <span class="text-xs text-gray-400">Delivery via Email</span>

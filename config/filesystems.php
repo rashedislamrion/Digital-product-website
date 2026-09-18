@@ -62,7 +62,8 @@ return [
 
         // Private S3-compatible disk for licensed digital product files (AWS S3, Cloudflare R2, DigitalOcean Spaces)
         's3_secure' => [
-            'driver' => 's3',
+            'driver' => env('SECURE_FILESYSTEM_DRIVER', env('AWS_SECURE_BUCKET') ? 's3' : 'local'),
+            'root' => storage_path('app/secure_releases'),
             'key' => env('AWS_SECURE_ACCESS_KEY_ID', env('AWS_ACCESS_KEY_ID')),
             'secret' => env('AWS_SECURE_SECRET_ACCESS_KEY', env('AWS_SECRET_ACCESS_KEY')),
             'region' => env('AWS_SECURE_DEFAULT_REGION', env('AWS_DEFAULT_REGION', 'us-east-1')),
@@ -70,7 +71,7 @@ return [
             'endpoint' => env('AWS_SECURE_ENDPOINT', env('AWS_ENDPOINT')),
             'use_path_style_endpoint' => env('AWS_SECURE_USE_PATH_STYLE_ENDPOINT', env('AWS_USE_PATH_STYLE_ENDPOINT', false)),
             'visibility' => 'private',
-            'throw' => true,
+            'throw' => false,
             'report' => false,
         ],
 

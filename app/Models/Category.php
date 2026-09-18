@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\ProductVisibility;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,5 +41,15 @@ class Category extends Model
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function publishedProducts(): HasMany
+    {
+        return $this->hasMany(Product::class)->where('visibility', ProductVisibility::Published);
+    }
+
+    public function scopeVisible(Builder $query): Builder
+    {
+        return $query->where('is_visible', true);
     }
 }

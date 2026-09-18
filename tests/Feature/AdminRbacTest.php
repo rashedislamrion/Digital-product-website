@@ -74,51 +74,51 @@ it('restricts customer accounts from accessing the Filament admin panel', functi
 it('allows Super Admin to access all administrative pages', function () {
     $superAdmin = User::where('email', 'admin@example.com')->first();
 
-    $this->actingAs($superAdmin)->get('/admin/catalog-management')->assertOk();
-    $this->actingAs($superAdmin)->get('/admin/finance-orders')->assertOk();
-    $this->actingAs($superAdmin)->get('/admin/support-desk')->assertOk();
-    $this->actingAs($superAdmin)->get('/admin/review-moderation')->assertOk();
-    $this->actingAs($superAdmin)->get('/admin/system-settings')->assertOk();
+    $this->actingAs($superAdmin)->get('/admin/products')->assertOk();
+    $this->actingAs($superAdmin)->get('/admin/orders')->assertOk();
+    $this->actingAs($superAdmin)->get('/admin/support-tickets')->assertOk();
+    $this->actingAs($superAdmin)->get('/admin/reviews')->assertOk();
+    $this->actingAs($superAdmin)->get('/admin/store-settings')->assertOk();
 });
 
 it('restricts Finance Manager to finance pages only', function () {
     $finance = User::where('email', 'finance@example.com')->first();
 
-    $this->actingAs($finance)->get('/admin/finance-orders')->assertOk();
-    $this->actingAs($finance)->get('/admin/catalog-management')->assertForbidden();
-    $this->actingAs($finance)->get('/admin/support-desk')->assertForbidden();
-    $this->actingAs($finance)->get('/admin/review-moderation')->assertForbidden();
-    $this->actingAs($finance)->get('/admin/system-settings')->assertForbidden();
+    $this->actingAs($finance)->get('/admin/orders')->assertOk();
+    $this->actingAs($finance)->get('/admin/products')->assertForbidden();
+    $this->actingAs($finance)->get('/admin/support-tickets')->assertForbidden();
+    $this->actingAs($finance)->get('/admin/reviews')->assertForbidden();
+    $this->actingAs($finance)->get('/admin/store-settings')->assertForbidden();
 });
 
 it('restricts Catalog Editor to catalog pages only', function () {
     $catalog = User::where('email', 'catalog@example.com')->first();
 
-    $this->actingAs($catalog)->get('/admin/catalog-management')->assertOk();
-    $this->actingAs($catalog)->get('/admin/finance-orders')->assertForbidden();
-    $this->actingAs($catalog)->get('/admin/support-desk')->assertForbidden();
-    $this->actingAs($catalog)->get('/admin/review-moderation')->assertForbidden();
-    $this->actingAs($catalog)->get('/admin/system-settings')->assertForbidden();
+    $this->actingAs($catalog)->get('/admin/products')->assertOk();
+    $this->actingAs($catalog)->get('/admin/orders')->assertForbidden();
+    $this->actingAs($catalog)->get('/admin/support-tickets')->assertForbidden();
+    $this->actingAs($catalog)->get('/admin/reviews')->assertForbidden();
+    $this->actingAs($catalog)->get('/admin/store-settings')->assertForbidden();
 });
 
 it('restricts Support Agent to support pages only', function () {
     $support = User::where('email', 'support@example.com')->first();
 
-    $this->actingAs($support)->get('/admin/support-desk')->assertOk();
-    $this->actingAs($support)->get('/admin/catalog-management')->assertForbidden();
-    $this->actingAs($support)->get('/admin/finance-orders')->assertForbidden();
-    $this->actingAs($support)->get('/admin/review-moderation')->assertForbidden();
-    $this->actingAs($support)->get('/admin/system-settings')->assertForbidden();
+    $this->actingAs($support)->get('/admin/support-tickets')->assertOk();
+    $this->actingAs($support)->get('/admin/products')->assertForbidden();
+    $this->actingAs($support)->get('/admin/orders')->assertForbidden();
+    $this->actingAs($support)->get('/admin/reviews')->assertForbidden();
+    $this->actingAs($support)->get('/admin/store-settings')->assertForbidden();
 });
 
 it('restricts Review Moderator to review pages only', function () {
     $reviewer = User::where('email', 'reviewer@example.com')->first();
 
-    $this->actingAs($reviewer)->get('/admin/review-moderation')->assertOk();
-    $this->actingAs($reviewer)->get('/admin/catalog-management')->assertForbidden();
-    $this->actingAs($reviewer)->get('/admin/finance-orders')->assertForbidden();
-    $this->actingAs($reviewer)->get('/admin/support-desk')->assertForbidden();
-    $this->actingAs($reviewer)->get('/admin/system-settings')->assertForbidden();
+    $this->actingAs($reviewer)->get('/admin/reviews')->assertOk();
+    $this->actingAs($reviewer)->get('/admin/products')->assertForbidden();
+    $this->actingAs($reviewer)->get('/admin/orders')->assertForbidden();
+    $this->actingAs($reviewer)->get('/admin/support-tickets')->assertForbidden();
+    $this->actingAs($reviewer)->get('/admin/store-settings')->assertForbidden();
 });
 
 it('redirects staff members to /admin upon login from the storefront', function () {

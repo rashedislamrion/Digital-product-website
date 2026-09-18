@@ -11,6 +11,7 @@ use App\Enums\ReviewStatus;
 use App\Enums\WebhookEventStatus;
 use App\Models\AuditLog;
 use App\Models\Category;
+use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\DownloadEvent;
 use App\Models\DownloadGrant;
@@ -26,7 +27,9 @@ use App\Models\Review;
 use App\Models\User;
 use App\Models\WebhookEvent;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use ZipArchive;
 
 class DatabaseSeeder extends Seeder
 {
@@ -83,7 +86,12 @@ class DatabaseSeeder extends Seeder
                     ['tier' => 'Team License', 'seats' => 5, 'amount' => 9900],
                     ['tier' => 'Unlimited License', 'seats' => 999999, 'amount' => 24900],
                 ],
-                'versions' => ['1.0.0', '2.1.0'],
+                'versions' => [
+                    ['version' => '1.0.0', 'status' => ProductVersionStatus::Published, 'safe' => true],
+                    ['version' => '2.1.0', 'status' => ProductVersionStatus::Published, 'safe' => true],
+                    ['version' => '2.2.0-rc1', 'status' => ProductVersionStatus::Quarantined, 'safe' => true], // Verified safe, ready for publish action demo
+                    ['version' => '2.3.0-dev', 'status' => ProductVersionStatus::Quarantined, 'safe' => false], // Quarantined, awaiting scan demo
+                ],
             ],
             [
                 'category_slug' => 'apis-microservice-scripts',
@@ -243,22 +251,36 @@ class DatabaseSeeder extends Seeder
                 );
             }
 
-            // Seed Versions & Files
+            // Seed Versions & Files with Real Physical ZIP Archives on s3_secure Disk
             foreach ($pData['versions'] as $ver) {
+                $verNumber = is_array($ver) ? $ver['version'] : $ver;
+                $status = is_array($ver) ? ($ver['status'] ?? ProductVersionStatus::Published) : ProductVersionStatus::Published;
+                $isSafe = is_array($ver) ? ($ver['safe'] ?? true) : true;
+                $releasedAt = $status === ProductVersionStatus::Published ? now()->subDays(rand(5, 45)) : null;
+
                 $version = ProductVersion::firstOrCreate(
                     [
                         'product_id' => $product->id,
-                        'version_number' => $ver,
+                        'version_number' => $verNumber,
                     ],
                     [
-                        'changelog_markdown' => "### Release v{$ver}\n- Enhanced architecture stability\n- Security updates and memory tuning\n- Framework 13 compatibility updates",
+                        'changelog_markdown' => "### Release v{$verNumber}\n- Enhanced architecture stability\n- Security updates and memory tuning\n- Framework 13 compatibility updates",
                         'min_runtime_version' => 'PHP 8.3',
-                        'status' => ProductVersionStatus::Published,
-                        'released_at' => now()->subDays(rand(5, 45)),
+                        'status' => $status,
+                        'released_at' => $releasedAt,
                     ]
                 );
 
-                $fileName = "{$product->slug}-v{$ver}.zip";
+                $fileName = "{$product->slug}-v{$verNumber}.zip";
+                $zipBinary = $this->generateDummyZip($product->slug, $product->title, $verNumber);
+                $storageDir = 'releases/'.(string) Str::uuid();
+                $storagePath = "{$storageDir}/{$fileName}";
+
+                // Write actual binary to s3_secure disk
+                Storage::disk('s3_secure')->put($storagePath, $zipBinary);
+                $checksum = hash('sha256', $zipBinary);
+                $sizeBytes = strlen($zipBinary);
+
                 ProductFile::firstOrCreate(
                     [
                         'product_version_id' => $version->id,
@@ -266,11 +288,11 @@ class DatabaseSeeder extends Seeder
                     ],
                     [
                         'storage_disk' => 's3_secure',
-                        'storage_path' => 'releases/'.(string) Str::uuid().'/'.$fileName,
-                        'file_size_bytes' => rand(5_000_000, 25_000_000),
+                        'storage_path' => $storagePath,
+                        'file_size_bytes' => $sizeBytes,
                         'mime_type' => 'application/zip',
-                        'checksum_sha256' => hash('sha256', "{$product->slug}-{$ver}-release-content"),
-                        'is_scanned_safe' => true,
+                        'checksum_sha256' => $checksum,
+                        'is_scanned_safe' => $isSafe,
                     ]
                 );
             }
@@ -482,5 +504,59 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now(),
             ]
         );
+
+        // 8. Seed Standard Launch & Promo Coupons
+        Coupon::firstOrCreate(
+            ['code' => 'LAUNCH30'],
+            [
+                'discount_type' => 'percent',
+                'discount_value' => 30, // 30% discount
+                'currency' => 'USD',
+                'min_order_amount_minor' => 2000, // $20.00 min spend
+                'max_uses' => 500,
+                'times_used' => 14,
+                'expires_at' => now()->addMonths(6),
+                'is_active' => true,
+            ]
+        );
+
+        Coupon::firstOrCreate(
+            ['code' => 'DEV10'],
+            [
+                'discount_type' => 'fixed',
+                'discount_value' => 1000, // $10.00 off
+                'currency' => 'USD',
+                'min_order_amount_minor' => 3000, // $30.00 min spend
+                'max_uses' => 200,
+                'times_used' => 5,
+                'expires_at' => now()->addMonths(3),
+                'is_active' => true,
+            ]
+        );
+    }
+
+    protected function generateDummyZip(string $productSlug, string $productTitle, string $version): string
+    {
+        $tempFile = tempnam(sys_get_temp_dir(), 'release_zip_');
+        $zip = new ZipArchive;
+        if ($zip->open($tempFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            $zip->addFromString('README.md', "# {$productTitle} v{$version}\n\nThank you for licensing {$productTitle}. This package includes production-ready source code, tests, and documentation.");
+            $zip->addFromString('manifest.json', (string) json_encode([
+                'product' => $productSlug,
+                'version' => $version,
+                'created_at' => now()->toIso8601String(),
+                'compatibility' => [
+                    'php' => '>=8.2',
+                    'framework' => 'Laravel 13.x',
+                ],
+            ], JSON_PRETTY_PRINT));
+            $zip->addFromString('src/index.php', "<?php\n\n// {$productTitle} v{$version} entrypoint\necho '{$productTitle} initialized successfully.';\n");
+            $zip->close();
+        }
+
+        $contents = (string) file_get_contents($tempFile);
+        @unlink($tempFile);
+
+        return $contents;
     }
 }

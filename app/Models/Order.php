@@ -24,6 +24,8 @@ class Order extends Model
         'tax_minor',
         'total_minor',
         'payment_gateway',
+        'coupon_id',
+        'coupon_code',
     ];
 
     protected function casts(): array
@@ -40,6 +42,11 @@ class Order extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function items(): HasMany

@@ -21,13 +21,15 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:login');
 
     // Passwordless Magic Link Login
     Route::get('magic-link', [MagicLinkController::class, 'create'])
         ->name('magic-link.create');
 
     Route::post('magic-link', [MagicLinkController::class, 'store'])
+        ->middleware('throttle:login')
         ->name('magic-link.store');
 
     Route::get('magic-link/verify', [MagicLinkController::class, 'verify'])

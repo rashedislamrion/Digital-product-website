@@ -26,13 +26,10 @@ class MagicLinkController extends Controller
     /**
      * Generate temporary signed URL and dispatch notification.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(\App\Http\Requests\MagicLinkRequest $request): RedirectResponse
     {
-        $request->validate([
-            'email' => ['required', 'email', 'max:255'],
-        ]);
-
-        $email = strtolower(trim($request->email));
+        $validated = $request->validated();
+        $email = $validated['email'];
 
         // Generate HMAC-SHA256 signed URL valid for 15 minutes
         $signedUrl = URL::temporarySignedRoute(

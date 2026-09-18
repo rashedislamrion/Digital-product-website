@@ -27,6 +27,11 @@ class ProductPolicy
         return $user->can('catalog.create_update');
     }
 
+    public function delete(User $user, Product $product): bool
+    {
+        return $user->can('catalog.create_update');
+    }
+
     public function publish(User $user, Product $product): bool
     {
         return $user->can('catalog.publish_version');

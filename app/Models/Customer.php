@@ -44,4 +44,9 @@ class Customer extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
 }
